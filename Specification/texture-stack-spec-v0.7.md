@@ -287,4 +287,4 @@ Feedback in chat is enough. For each Tweak or Rework the agent writes the decisi
 - **Q4.** Should the control source also accept a webcam, and should video files loop?
   - **Resolved:** Yes — loaded video files loop automatically (`loop = true`), and the `webcam` button shown in the Figma prototype is active on both Control and Mask inputs (`getUserMedia`).
 - **Q5.** Netlify: who owns the account and does the deploys? Custom domain?
-  - **Status:** Configured via `netlify.toml` (`publish = "dist"`, `command = "npm run build"`), ready for static deployment on the user's Netlify account.
+  - **Resolved (2026-10-25):** Deployed via Netlify CLI on the user's account (team `src.phag`). Site: **https://texturestack.netlify.app** (admin: https://app.netlify.com/projects/texturestack, project ID `be0318fa-d1a2-4de1-a609-b57fde8ada41`). Production verified: demo scene loads (25 stack layers, 1280×720 canvas), zero console errors, debug API gated off without `?debug=1` (§8.2). Custom domain: none yet.
