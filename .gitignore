@@ -1,0 +1,11 @@
+node_modules/
+dist/
+test-results/
+playwright-report/
+.vite/
+
+# Local editor workspace state
+.obsidian/
+
+# Oversized raw scan source (>100 MB GitHub limit) — keep the rest of the mesh reference
+Mesh/van-with-interior-free-raw-scan/source/Vaninterior/vaninterior.obj

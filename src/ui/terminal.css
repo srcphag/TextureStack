@@ -1,0 +1,294 @@
+/* ==========================================================================
+   terminal.css - Terminal CSS Component Library v0.0.4
+   Source: https://github.com/letieu/terminal.css
+   ========================================================================== */
+
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap");
+
+/* 1. CSS VARIABLES */
+:root {
+  --terminal-bg: #050505;
+  --terminal-fg: #cccccc;
+
+  /* ANSI Palette */
+  --terminal-black: #000000;
+  --terminal-red: #ff5555;
+  --terminal-green: #50fa7b;
+  --terminal-yellow: #f1fa8c;
+  --terminal-blue: #bd93f9;
+  --terminal-magenta: #ff79c6;
+  --terminal-cyan: #8be9fd;
+  --terminal-white: #ffffff;
+
+  /* Semantic Colors */
+  --primary: var(--terminal-cyan);
+  --danger: var(--terminal-red);
+  --success: var(--terminal-green);
+  --warning: var(--terminal-yellow);
+  --info: var(--terminal-blue);
+  --border-color: #333333;
+  --surface: #000000;
+  --muted: #666666;
+}
+
+/* 2. BASE STYLES */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--terminal-bg);
+  color: var(--terminal-fg);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: none;
+}
+
+::selection {
+  background: var(--primary);
+  color: var(--terminal-black);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin: 0;
+  font-weight: bold;
+  line-height: 1.2;
+}
+
+p {
+  margin: 0 0 1em 0;
+}
+
+a {
+  color: var(--primary);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+hr {
+  border: none;
+  border-top: 1px solid var(--border-color);
+  margin: 16px 0;
+}
+
+/* TITLE (Bulma-style) */
+.title {
+  font-weight: bold;
+  color: var(--primary);
+  text-transform: uppercase;
+  margin-bottom: 16px;
+  letter-spacing: 1px;
+}
+
+.title.is-6 {
+  font-size: 1rem;
+  line-height: 1.3;
+}
+
+/* 4. BUTTONS (Bulma-style) */
+.button {
+  background: var(--surface);
+  border: 1px solid var(--border-color);
+  color: var(--terminal-fg);
+  border-radius: 0;
+  cursor: pointer;
+  padding: 6px 12px;
+  font-size: 13.6px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: inherit;
+  text-decoration: none;
+  line-height: 1.2;
+  vertical-align: middle;
+  transition: none;
+}
+
+.button:hover:not(:disabled) {
+  background: var(--border-color);
+}
+
+.button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.button.is-primary {
+  background: var(--primary);
+  color: var(--terminal-black);
+  border-color: var(--primary);
+}
+
+.button.is-primary:hover:not(:disabled) {
+  background: var(--terminal-white);
+  border-color: var(--terminal-white);
+}
+
+.button.is-danger {
+  background: transparent;
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.button.is-danger:hover:not(:disabled) {
+  background: var(--danger);
+  color: var(--terminal-black);
+}
+
+/* 5. TAGS (Bulma-style) */
+.tag {
+  background: transparent;
+  border: 1px solid var(--muted);
+  color: var(--muted);
+  border-radius: 0;
+  padding: 2px 8px;
+  font-size: 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+  vertical-align: middle;
+}
+
+.tag.is-primary {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+/* 6. FORMS (Bulma-style) */
+.field {
+  margin-bottom: 12px;
+}
+
+.label {
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.control {
+  background: var(--terminal-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 0;
+  display: flex;
+  align-items: center;
+  padding: 3px 6px;
+  min-height: 33px;
+}
+
+.control:focus-within {
+  border-color: var(--primary);
+}
+
+.input,
+.textarea,
+.select {
+  background: transparent;
+  border: none;
+  outline: none !important;
+  color: var(--terminal-fg);
+  font-family: inherit;
+  font-size: 13px;
+  width: 100%;
+  padding: 2px 4px;
+}
+
+/* 10. PROGRESS & LOADING (Bulma-style) */
+.progress {
+  width: 100%;
+  height: 8px;
+  background: var(--border-color);
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+  position: relative;
+}
+
+.progress-bar {
+  height: 100%;
+  background: var(--primary);
+  transition: width 0.1s linear;
+}
+
+/* 12. UTILITIES */
+.has-text-primary {
+  color: var(--primary) !important;
+}
+
+.has-text-danger {
+  color: var(--danger) !important;
+}
+
+.has-text-muted {
+  color: var(--muted) !important;
+}
+
+/* 14. TOAST / NOTIFICATION */
+.toast-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 420px;
+}
+
+.toast {
+  background: var(--surface);
+  border: 1px solid var(--border-color);
+  border-left-width: 4px;
+  padding: 12px 14px;
+  min-width: 280px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.toast.is-danger {
+  border-left-color: var(--danger);
+}
+
+.toast.is-danger .toast-title {
+  color: var(--danger);
+  font-weight: 700;
+  font-size: 12px;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+
+.toast-message {
+  font-size: 12px;
+  color: var(--terminal-fg);
+  line-height: 1.4;
+}
+
+.toast-close {
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 14px;
+  padding: 0 4px;
+  margin-left: auto;
+  font-family: inherit;
+}
+
+.toast-close:hover {
+  color: var(--terminal-fg);
+}

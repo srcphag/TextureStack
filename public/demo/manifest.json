@@ -1,0 +1,31 @@
+{
+  "controlImage": "./demo/input1.png",
+  "controlVideo": "./demo/TestVideo1.mov",
+  "stackImages": [
+    "./demo/stack/1243756.jpg",
+    "./demo/stack/1254659.jpg",
+    "./demo/stack/1283466.jpg",
+    "./demo/stack/1317156.jpg",
+    "./demo/stack/134206.jpg",
+    "./demo/stack/1369162.jpg",
+    "./demo/stack/1440465.jpg",
+    "./demo/stack/148284.jpg",
+    "./demo/stack/1624481.jpg",
+    "./demo/stack/178045.jpg",
+    "./demo/stack/1920465.jpg",
+    "./demo/stack/1989609.jpg",
+    "./demo/stack/2069887.jpg",
+    "./demo/stack/2148982.jpg",
+    "./demo/stack/2209751.jpg",
+    "./demo/stack/2285664.jpg",
+    "./demo/stack/256063.jpg",
+    "./demo/stack/301246.jpg",
+    "./demo/stack/353913.jpg",
+    "./demo/stack/371897.jpg",
+    "./demo/stack/371902.jpg",
+    "./demo/stack/371903.jpg",
+    "./demo/stack/390369.jpg",
+    "./demo/stack/438106.jpg",
+    "./demo/stack/490870.jpg"
+  ]
+}

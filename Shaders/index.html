@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Texture Stack — browser test</title>
+<style>
+  html, body { margin:0; height:100%; background:#111; color:#ccc; font:13px/1.4 system-ui, sans-serif; }
+  #ui { position:fixed; top:0; left:0; right:0; z-index:2; display:flex; gap:16px; align-items:center;
+        padding:8px 12px; background:rgba(0,0,0,.7); flex-wrap:wrap; }
+  #ui label { display:flex; gap:6px; align-items:center; white-space:nowrap; cursor:pointer; }
+  #ui input[type=file] { max-width:190px; color:#888; }
+  button { background:#333; color:#ccc; border:1px solid #555; border-radius:4px; padding:3px 10px; cursor:pointer; }
+  button:hover { background:#444; }
+  #status { color:#7c7; }
+  #gl { position:fixed; inset:0; width:100%; height:100%; display:block; }
+  #err { position:fixed; inset:0; display:none; place-items:center; color:#f88; padding:2em;
+         text-align:center; white-space:pre-wrap; z-index:3; background:#111; }
+</style>
+</head>
+<body>
+<div id="ui">
+  <label>Control map <input id="controlFile" type="file" accept="image/*"></label>
+  <label>Stack images <input id="stackFiles" type="file" accept="image/*" multiple></label>
+  <button id="demoBtn">Reset demo</button>
+  <label><input id="smooth" type="checkbox" checked> smooth blend</label>
+  <label><input id="animate" type="checkbox" checked> animate control</label>
+  <span id="status"></span>
+</div>
+<canvas id="gl"></canvas>
+<div id="err"></div>
+
+<script>
+"use strict";
+
+// ============================================================
+// Browser port of texture_stack.glsl (TouchDesigner GLSL Multi TOP)
+//
+// Differences from the TD version:
+//  - sTD2DInputs[] -> sampler2DArray (WebGL can't dynamically index
+//    a sampler array; a 2D texture array is the correct equivalent)
+//  - all stack layers are resized (cover-crop) to a common size,
+//    which replaces the uFitSize aspect-fit idea
+//  - control map filtering follows the original note:
+//    NEAREST for hard switch, LINEAR for smooth blend
+// ============================================================
+
+const canvas   = document.getElementById('gl');
+const statusEl = document.getElementById('status');
+const errBox   = document.getElementById('err');
+const smoothCb = document.getElementById('smooth');
+const animateCb = document.getElementById('animate');
+
+function fail(msg) {
+  errBox.style.display = 'grid';
+  errBox.textContent = msg;
+  throw new Error(msg);
+}
+
+const gl = canvas.getContext('webgl2');
+if (!gl) fail('WebGL2 is not available in this browser.');
+
+// ---------- shaders ----------
+
+const VS = `#version 300 es
+out vec2 vUV;
+void main() {
+  // fullscreen triangle, no buffers needed
+  vec2 p = vec2(float((gl_VertexID << 1) & 2), float(gl_VertexID & 2));
+  vUV = p;
+  gl_Position = vec4(p * 2.0 - 1.0, 0.0, 1.0);
+}`;
+
+const FS = `#version 300 es
+precision highp float;
+uniform sampler2D uControl;
+uniform highp sampler2DArray uStack;
+uniform float uNumImages;   // how many images are stacked
+uniform float uSmoothBlend; // 0.0 = hard switch, 1.0 = crossfade between neighbors
+in vec2 vUV;
+out vec4 fragColor;
+void main() {
+  float control = texture(uControl, vUV).r;                 // normalized 0-1
+  float scaled  = clamp(control, 0.0, 1.0) * (uNumImages - 1.0);
+
+  if (uSmoothBlend < 0.5) {
+    // --- hard switch: nearest layer only ---
+    float idx = clamp(floor(scaled + 0.5), 0.0, uNumImages - 1.0);
+    fragColor = texture(uStack, vec3(vUV, idx));
+  } else {
+    // --- smooth crossfade between the two straddling layers ---
+    float idxA = clamp(floor(scaled), 0.0, uNumImages - 1.0);
+    float idxB = min(idxA + 1.0, uNumImages - 1.0);
+    fragColor = mix(texture(uStack, vec3(vUV, idxA)),
+                    texture(uStack, vec3(vUV, idxB)),
+                    fract(scaled));
+  }
+}`;
+
+function compile(type, src) {
+  const s = gl.createShader(type);
+  gl.shaderSource(s, src);
+  gl.compileShader(s);
+  if (!gl.getShaderParameter(s, gl.COMPILE_STATUS))
+    fail('Shader compile error:\n' + gl.getShaderInfoLog(s));
+  return s;
+}
+
+const prog = gl.createProgram();
+gl.attachShader(prog, compile(gl.VERTEX_SHADER, VS));
+gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, FS));
+gl.linkProgram(prog);
+if (!gl.getProgramParameter(prog, gl.LINK_STATUS))
+  fail('Program link error:\n' + gl.getProgramInfoLog(prog));
+gl.useProgram(prog);
+
+const loc = {
+  control:    gl.getUniformLocation(prog, 'uControl'),
+  stack:      gl.getUniformLocation(prog, 'uStack'),
+  numImages:  gl.getUniformLocation(prog, 'uNumImages'),
+  smoothBlend: gl.getUniformLocation(prog, 'uSmoothBlend'),
+};
+
+// ---------- textures ----------
+
+gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+gl.activeTexture(gl.TEXTURE0);
+const controlTex = gl.createTexture();
+gl.bindTexture(gl.TEXTURE_2D, controlTex);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+gl.activeTexture(gl.TEXTURE1);
+let stackTex = null;
+gl.activeTexture(gl.TEXTURE0);
+
+let numImages = 0;
+let stackW = 0, stackH = 0;
+let userControl = false;
+
+function setControlFilter() {
+  // matches the note in the original shader:
+  // NEAREST for hard switch, LINEAR for smooth blend
+  const f = smoothCb.checked ? gl.LINEAR : gl.NEAREST;
+  gl.bindTexture(gl.TEXTURE_2D, controlTex);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, f);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, f);
+}
+setControlFilter();
+
+// upload an image/canvas into layer `i` of the stack, cover-cropped to WxH
+const fitCanvas = document.createElement('canvas');
+function uploadLayer(img, i, W, H) {
+  fitCanvas.width = W; fitCanvas.height = H;
+  const x = fitCanvas.getContext('2d');
+  const s = Math.max(W / img.width, H / img.height);
+  const dw = img.width * s, dh = img.height * s;
+  x.drawImage(img, (W - dw) / 2, (H - dh) / 2, dw, dh);
+  gl.texSubImage3D(gl.TEXTURE_2D_ARRAY, 0, 0, 0, i, W, H, 1,
+                   gl.RGBA, gl.UNSIGNED_BYTE, fitCanvas);
+}
+
+function buildStack(images) {
+  // size the array to the first image's aspect (capped), demo is square
+  const iw = images[0].width, ih = images[0].height;
+  const s = Math.min(1, 1600 / Math.max(iw, ih));
+  stackW = Math.round(iw * s); stackH = Math.round(ih * s);
+  numImages = images.length;
+
+  gl.activeTexture(gl.TEXTURE1);
+  if (stackTex) gl.deleteTexture(stackTex);
+  stackTex = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D_ARRAY, stackTex);
+  gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  gl.texImage3D(gl.TEXTURE_2D_ARRAY, 0, gl.RGBA8, stackW, stackH, numImages,
+                0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+  images.forEach((img, i) => uploadLayer(img, i, stackW, stackH));
+  gl.activeTexture(gl.TEXTURE0);
+
+  statusEl.textContent = `${numImages} layers · ${stackW}×${stackH}`;
+}
+
+function uploadControlImage(img) {
+  gl.bindTexture(gl.TEXTURE_2D, controlTex);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
+}
+
+// procedural control map (CPU, low res, re-uploaded per frame when animating)
+const CW = 256, CH = 256;
+const controlData = new Uint8Array(CW * CH);
+function genControl(t) {
+  for (let y = 0; y < CH; y++) {
+    const v = y / CH;
+    for (let x = 0; x < CW; x++) {
+      const u = x / CW;
+      const val = 0.5 + 0.5 * Math.sin((u * 1.5 + v * 0.75 + t * 0.15) * Math.PI * 2);
+      controlData[y * CW + x] = val * 255;
+    }
+  }
+}
+function uploadControlRaw(t) {
+  genControl(t);
+  gl.bindTexture(gl.TEXTURE_2D, controlTex);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.LUMINANCE, CW, CH, 0,
+                gl.LUMINANCE, gl.UNSIGNED_BYTE, controlData);
+}
+
+// ---------- demo content ----------
+
+function makeDemoLayers() {
+  const layers = [];
+  for (let i = 0; i < 6; i++) {
+    const c = document.createElement('canvas');
+    c.width = c.height = 1024;
+    const x = c.getContext('2d');
+    const hue = i * 60;
+    const g = x.createLinearGradient(0, 0, 1024, 1024);
+    g.addColorStop(0, `hsl(${hue}, 70%, 45%)`);
+    g.addColorStop(1, `hsl(${(hue + 40) % 360}, 70%, 22%)`);
+    x.fillStyle = g;
+    x.fillRect(0, 0, 1024, 1024);
+    x.fillStyle = 'rgba(255,255,255,.85)';
+    x.font = 'bold 420px system-ui, sans-serif';
+    x.textAlign = 'center';
+    x.textBaseline = 'middle';
+    x.fillText(String(i + 1), 512, 540);
+    layers.push(c);
+  }
+  return layers;
+}
+
+function loadDemo() {
+  buildStack(makeDemoLayers());
+  userControl = false;
+  animateCb.checked = true;
+  statusEl.textContent += ' · demo';
+}
+
+// ---------- UI wiring ----------
+
+function loadImageFile(file) {
+  return new Promise((res, rej) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => { URL.revokeObjectURL(url); res(img); };
+    img.onerror = () => { URL.revokeObjectURL(url); rej(new Error('bad image: ' + file.name)); };
+    img.src = url;
+  });
+}
+
+document.getElementById('stackFiles').addEventListener('change', async (e) => {
+  const files = [...e.target.files].slice(0, 16);
+  if (!files.length) return;
+  try {
+    const imgs = await Promise.all(files.map(loadImageFile));
+    buildStack(imgs);
+  } catch (err) { statusEl.textContent = err.message; }
+});
+
+document.getElementById('controlFile').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  try {
+    uploadControlImage(await loadImageFile(file));
+    userControl = true;
+    animateCb.checked = false;
+  } catch (err) { statusEl.textContent = err.message; }
+});
+
+document.getElementById('demoBtn').addEventListener('click', loadDemo);
+smoothCb.addEventListener('change', setControlFilter);
+
+// ---------- render loop ----------
+
+function resize() {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const w = Math.round(canvas.clientWidth * dpr);
+  const h = Math.round(canvas.clientHeight * dpr);
+  if (canvas.width !== w || canvas.height !== h) {
+    canvas.width = w; canvas.height = h;
+  }
+}
+
+function frame(now) {
+  resize();
+  if (!userControl && animateCb.checked) uploadControlRaw(now / 1000);
+
+  gl.viewport(0, 0, canvas.width, canvas.height);
+  gl.uniform1i(loc.control, 0);
+  gl.uniform1i(loc.stack, 1);
+  gl.uniform1f(loc.numImages, numImages);
+  gl.uniform1f(loc.smoothBlend, smoothCb.checked ? 1 : 0);
+  gl.drawArrays(gl.TRIANGLES, 0, 3);
+
+  requestAnimationFrame(frame);
+}
+
+loadDemo();
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

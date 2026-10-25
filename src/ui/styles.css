@@ -1,0 +1,597 @@
+/* ==========================================================================
+   TextureStack — Figma UI tokens & component styles on top of terminal.css
+   Figma file: db532jDMtyLb0Tbn9BWECj (Desktop - 1:1, 16:9, Empty sources)
+   ========================================================================== */
+
+:root {
+  --ts-bg-outer: #050505;
+  --ts-bg-stage: #0d0d0d;
+  --ts-cyan: #8be9fd;
+  --ts-text: #cccccc;
+  --ts-muted: #666666;
+  --ts-border: #333333;
+  --ts-canvas-border: #666666;
+  --ts-gap-panel: 20px;
+  --ts-gap-inner: 8px;
+}
+
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+  background: var(--ts-bg-outer);
+  color: var(--ts-text);
+}
+
+#app {
+  display: grid;
+  grid-template-columns: 319px 1fr 250px;
+  height: 100vh;
+  width: 100vw;
+  background: var(--ts-bg-outer);
+}
+
+/* Panels */
+.ts-panel-inputs,
+.ts-panel-params {
+  background: var(--ts-bg-outer);
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  overflow-y: auto;
+  height: 100vh;
+}
+
+.ts-panel-inputs {
+  border-right: 1px solid #161616;
+}
+
+.ts-panel-params {
+  border-left: 1px solid #161616;
+  gap: 12px;
+  padding: 16px 20px;
+}
+
+.ts-panel-stage {
+  background: var(--ts-bg-stage);
+  padding: 20px 30px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100vh;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Section Headings (Figma 2:106, 2:114, 5:299) */
+.ts-section-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  min-height: 24px;
+  gap: 8px;
+}
+
+.ts-section-title {
+  color: var(--ts-cyan);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+
+.ts-section-meta {
+  color: var(--ts-muted);
+  font-size: 12px;
+  font-weight: 400;
+  text-transform: uppercase;
+}
+
+.ts-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ts-btn-small {
+  padding: 4px 8px;
+  font-size: 11px;
+  height: 26px;
+  text-transform: lowercase;
+}
+
+/* Source Input Blocks (Figma 8:412 control input, 10:673 mask input) */
+.ts-source-block {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ts-block-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.ts-field-label {
+  color: var(--ts-muted);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 21px;
+  text-transform: lowercase;
+}
+
+.ts-field-count {
+  color: var(--ts-cyan);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.ts-source-grid {
+  display: grid;
+  grid-template-columns: 126px 118px;
+  gap: 14px;
+  align-items: stretch;
+}
+
+.ts-source-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ts-source-buttons .button {
+  width: 100%;
+  height: 34px;
+  padding: 0 8px;
+  font-size: 13.6px;
+  font-weight: 700;
+  text-transform: lowercase;
+  background: var(--ts-bg-outer);
+}
+
+.ts-source-buttons .button.is-primary {
+  background: var(--ts-cyan);
+  color: #000000;
+  border-color: var(--ts-cyan);
+}
+
+/* Thumbnail / Empty Box (Figma 118x118, 10:1229) */
+.ts-source-preview {
+  width: 118px;
+  height: 118px;
+  background: var(--ts-bg-outer);
+  border: 1px solid var(--ts-border);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  overflow: hidden;
+  user-select: none;
+}
+
+.ts-source-preview.is-loaded {
+  border-color: var(--ts-cyan);
+}
+
+.ts-source-preview:hover {
+  border-color: var(--ts-cyan);
+}
+
+.ts-source-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.ts-empty-glyph {
+  width: 28px;
+  height: 28px;
+  color: var(--ts-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ts-empty-label {
+  color: var(--ts-cyan);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: lowercase;
+}
+
+.ts-preview-badge {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(5, 5, 5, 0.82);
+  color: var(--ts-text);
+  font-size: 10px;
+  padding: 2px 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+}
+
+/* Stack List (Figma 8:413 texture input) */
+.ts-stack-container {
+  border: 1px solid var(--ts-border);
+  background: var(--ts-bg-outer);
+  padding: 10px;
+  min-height: 280px;
+  max-height: calc(100vh - 470px);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ts-stack-container.is-loaded {
+  border-color: var(--ts-cyan);
+}
+
+.ts-stack-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.ts-stack-item {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  border: 1px solid var(--ts-border);
+  background: #000000;
+  overflow: hidden;
+  cursor: grab;
+}
+
+.ts-stack-item.is-active-layer {
+  border-color: rgba(139, 233, 253, 0.55);
+}
+
+.ts-stack-item.is-inactive-layer {
+  opacity: 0.38;
+}
+
+.ts-stack-item.is-drag-over {
+  border: 2px solid var(--ts-cyan);
+}
+
+.ts-stack-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  pointer-events: none;
+}
+
+.ts-stack-index {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  background: rgba(5, 5, 5, 0.85);
+  color: var(--ts-cyan);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 4px;
+  line-height: 1.2;
+}
+
+.ts-stack-actions {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  background: rgba(5, 5, 5, 0.88);
+  opacity: 0;
+  transition: opacity 0.12s;
+}
+
+.ts-stack-item:hover .ts-stack-actions,
+.ts-stack-item:focus-within .ts-stack-actions {
+  opacity: 1;
+}
+
+.ts-stack-mini-btn {
+  background: transparent;
+  border: none;
+  color: var(--ts-text);
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 4px;
+  cursor: pointer;
+}
+
+.ts-stack-mini-btn:hover {
+  color: var(--ts-cyan);
+}
+
+.ts-stack-mini-btn.is-remove:hover {
+  color: var(--danger);
+}
+
+/* Center Stage Canvas & Transport */
+.ts-canvas-stage {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  padding: 16px 0;
+  position: relative;
+}
+
+.ts-render-canvas {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border: 1px solid var(--ts-canvas-border);
+  background: #000000;
+  display: block;
+}
+
+/* Stats Overlay (§8.2) */
+.ts-stats-overlay {
+  position: absolute;
+  top: 24px;
+  left: 12px;
+  background: rgba(5, 5, 5, 0.9);
+  border: 1px solid var(--ts-cyan);
+  padding: 8px 12px;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--ts-text);
+  pointer-events: none;
+  z-index: 20;
+}
+
+/* Playback actions (Figma 10:629 + "Progress Bar" frame 22:1581, D14) */
+.ts-playback {
+  display: flex;
+  align-items: flex-end;
+}
+
+.ts-transports {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  flex: 1;
+  min-width: 0;
+}
+
+.ts-transport {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+/* Static image / none source: light grey full track (Figma #d9d9d9) */
+.progress.is-static {
+  background: #d9d9d9;
+  border-color: #d9d9d9;
+  cursor: default;
+}
+
+.progress.is-static .progress-bar {
+  display: none;
+}
+
+/* Webcam live source: red full track (Figma #ef2828) */
+.progress.is-live {
+  background: #ef2828;
+  border-color: #ef2828;
+  cursor: default;
+}
+
+.progress.is-live .progress-bar {
+  display: none;
+}
+
+.ts-live-label {
+  color: var(--terminal-fg);
+  font-size: 12px;
+  align-self: center;
+}
+
+.ts-sync-btn {
+  white-space: nowrap;
+}
+
+.ts-progress-clickable {
+  cursor: pointer;
+}
+
+.ts-transport-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 30px;
+}
+
+.ts-transport-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ts-media-btn {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  background: var(--ts-bg-outer);
+  border: 1px solid var(--ts-border);
+  color: var(--ts-cyan);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+}
+
+.ts-media-btn:hover:not(:disabled) {
+  border-color: var(--ts-cyan);
+}
+
+.ts-media-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.ts-time-display {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--ts-muted);
+}
+
+.ts-time-current {
+  color: var(--ts-text);
+}
+
+/* Right Parameters Panel (Figma 10:478) */
+.ts-param-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ts-param-group.is-disabled {
+  opacity: 0.42;
+  pointer-events: none;
+}
+
+.ts-dual-controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+/* Figma Prefix + Input Control Box (e.g. [contrast | 1.0]) */
+.ts-control-box {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.ts-control-split {
+  background: var(--ts-bg-outer);
+  border: 1px solid var(--ts-border);
+  display: flex;
+  align-items: stretch;
+  height: 28px;
+}
+
+.ts-control-split:focus-within {
+  border-color: var(--ts-cyan);
+}
+
+.ts-control-prefix {
+  padding: 0 8px;
+  display: flex;
+  align-items: center;
+  color: var(--ts-muted);
+  font-size: 12px;
+  font-weight: 700;
+  border-right: 1px solid var(--ts-border);
+  white-space: nowrap;
+  user-select: none;
+}
+
+.ts-control-input {
+  background: transparent;
+  border: none;
+  color: var(--ts-text);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  width: 100%;
+  padding: 0 6px;
+  text-align: right;
+  outline: none;
+}
+
+/* Synchronized Range Slider + Reset button row */
+.ts-slider-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ts-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  background: var(--ts-border);
+  outline: none;
+  cursor: pointer;
+}
+
+.ts-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 10px;
+  height: 10px;
+  background: var(--ts-cyan);
+  border: none;
+  cursor: pointer;
+}
+
+.ts-slider::-moz-range-thumb {
+  width: 10px;
+  height: 10px;
+  background: var(--ts-cyan);
+  border: none;
+  border-radius: 0;
+  cursor: pointer;
+}
+
+.ts-reset-inline {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--ts-muted);
+  font-family: inherit;
+  font-size: 10px;
+  padding: 1px 4px;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.ts-reset-inline:hover:not(:disabled) {
+  color: var(--ts-cyan);
+  border-color: var(--ts-border);
+}
+
+.ts-toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ts-toggle-row .button {
+  flex: 1;
+  height: 29px;
+  background: var(--ts-bg-outer);
+  text-transform: lowercase;
+}
+
+.ts-toggle-row .button.is-primary {
+  background: var(--ts-cyan);
+  color: #000000;
+  border-color: var(--ts-cyan);
+}
