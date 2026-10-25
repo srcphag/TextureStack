@@ -14,10 +14,16 @@ async function bootstrap(): Promise<void> {
 
   try {
     const engine = new TextureStackEngine(canvas);
-    installDebugAPI(engine);
-    mountTextureStackUI(appRoot, canvas, engine);
 
     const params = new URLSearchParams(window.location.search);
+    // Debug access is exposed in dev/test builds only (Spec §8.2);
+    // on production it requires an explicit ?debug=1
+    if (import.meta.env.DEV || params.has('debug')) {
+      installDebugAPI(engine);
+    }
+
+    mountTextureStackUI(appRoot, canvas, engine);
+
     if (params.get('demo') === '1') {
       await engine.loadDemoScene();
     } else {
